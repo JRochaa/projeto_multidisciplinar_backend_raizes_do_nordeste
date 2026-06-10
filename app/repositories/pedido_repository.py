@@ -9,9 +9,13 @@ from app.repositories.produto_repository import buscar_produto_por_id
 
 
 # Lista todos os pedidos cadastrados.
-def listar_pedidos(db: Session):
-    return db.query(Pedido).all()
+def listar_pedidos(db: Session, canalPedido: str | None = None):
+    query = db.query(Pedido)
 
+    if canalPedido:
+        query = query.filter(Pedido.canalPedido == canalPedido)
+
+    return query.all()
 
 # Busca um pedido pelo id.
 def buscar_pedido_por_id(db: Session, pedido_id: int):
@@ -26,6 +30,7 @@ def criar_pedido(db: Session, pedido: PedidoCreate):
     # Criamos primeiro o pedido principal com status PENDENTE.
     novo_pedido = Pedido(
         cliente_id=pedido.cliente_id,
+        canalPedido=pedido.canalPedido,
         status="PENDENTE",
         valor_total=valor_total
     )

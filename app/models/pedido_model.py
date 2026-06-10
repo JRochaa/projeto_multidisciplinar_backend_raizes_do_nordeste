@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String, Numeric
+from sqlalchemy import Column, Integer, ForeignKey, String, Numeric, Enum
 from sqlalchemy.orm import relationship
 
 from app.database.connection import Base
@@ -16,6 +16,9 @@ class Pedido(Base):
     status = Column(String(50), nullable=False, default="PENDENTE")
     # Será calculado com base nos itens do pedido.
     valor_total = Column(Numeric(10, 2), nullable=False, default=0)
+    # Campo que diz em que canal o pedido foi realizado
+    canalPedido = Column(Enum("APP", "TOTEM", "BALCAO", "PICKUP", "WEB", name="canal_pedido_enum"),
+                        nullable=False)
     # Relacionamento com a tabela clientes.
     cliente = relationship("Usuario") 
     itens = relationship("ItemPedido", back_populates="pedido")# Relacionamento com os itens do pedido. Permite acessar os itens usando pedido.itens.
