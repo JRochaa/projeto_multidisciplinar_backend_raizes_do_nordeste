@@ -81,7 +81,7 @@ PROJETO_BACKEND_RAIZESDONORDESTE/
 Clone o repositório e acesse a pasta do projeto:
 
 ```bash
-git clone <url-do-repositorio>
+git clone <https://github.com/JRochaa/projeto_multidisciplinar_backend_raizes_do_nordeste>
 cd <nome-da-pasta-do-projeto>
 ```
 
