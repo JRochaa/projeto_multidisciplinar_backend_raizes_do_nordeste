@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.pagamento_model import Pagamento
 from app.schemas.pagamento_schema import PagamentoCreate
 from app.repositories.pedido_repository import buscar_pedido_por_id
-
+from random import choice
 
 # Lista todos os pagamentos cadastrados.
 def listar_pagamentos(db: Session):
@@ -28,8 +28,13 @@ def criar_pagamento(db: Session, pagamento: PagamentoCreate):
     if pedido.status == "PAGO":
         raise ValueError("Este pedido já está pago.")
 
-    # Como é um pagamento simulado, vamos aprovar automaticamente.
-    status_pagamento = "APROVADO"
+    
+    # Simulação de pagamento mock com aleatoriedade para aprovar e recusar o pagamento as vezes.
+    status_pagamento = choice([
+        "APROVADO",
+        "APROVADO",
+        "RECUSADO"
+    ])
 
     # Cria o pagamento usando o valor total do pedido.
     novo_pagamento = Pagamento(
@@ -42,10 +47,16 @@ def criar_pagamento(db: Session, pagamento: PagamentoCreate):
     db.add(novo_pagamento)
 
     # Atualiza o status do pedido para PAGO.
-    pedido.status = "PAGO"
+    if status_pagamento == "APROVADO":
+        pedido.status = "PAGO"
 
     db.commit()
 
     db.refresh(novo_pagamento)
+
+    if status_pagamento == "APROVADO":
+        novo_pagamento.mensagem = "Pagamento aprovado com sucesso."
+    else:
+        novo_pagamento.mensagem = "Pagamento recusado. O pedido permanece pendente e pode ser pago novamente."
 
     return novo_pagamento

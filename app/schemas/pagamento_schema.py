@@ -19,3 +19,7 @@ class PagamentoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+#Schema usado no processamento do pagamento, avisa se o pagamento foi "APROVADO" ou "RECUSADO".
+class PagamentoProcessamentoResponse(PagamentoResponse):
+    mensagem: str        
