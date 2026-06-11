@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.routes.auth_routes import exigir_administrador
 from app.database.connection import get_db
 from app.schemas.usuario_schema import ClienteCreate, ClienteResponse
 from app.repositories.usuario_repository import (
@@ -23,14 +24,21 @@ router = APIRouter(
 # Rota para listar todos os clientes cadastrados.
 # response_model informa o formato da resposta no Swagger.
 @router.get("/", response_model=list[ClienteResponse])
-def listar(db: Session = Depends(get_db)):
-    # db recebe uma sessão do banco usando a função get_db.
+def listar(
+    db: Session = Depends(get_db),
+    administrador = Depends(exigir_administrador)
+):
+    # Apenas administradores podem listar todos os usuários/clientes.
     return listar_clientes(db)
 
 
 # Rota para buscar um cliente específico pelo id.
 @router.get("/{cliente_id}", response_model=ClienteResponse)
-def buscar_por_id(cliente_id: int, db: Session = Depends(get_db)):
+def buscar_por_id(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    administrador = Depends(exigir_administrador)
+):
     # Busca o cliente no banco usando o repository.
     cliente = buscar_cliente_por_id(db, cliente_id)
 

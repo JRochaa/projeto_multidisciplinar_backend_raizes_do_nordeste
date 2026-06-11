@@ -30,7 +30,7 @@ def criar_pedido(db: Session, pedido: PedidoCreate):
     # Criamos primeiro o pedido principal com status PENDENTE.
     novo_pedido = Pedido(
         cliente_id=pedido.cliente_id,
-        canalPedido=pedido.canalPedido,
+        canalPedido=pedido.canalPedido.value,
         status="PENDENTE",
         valor_total=valor_total
     )

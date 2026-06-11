@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.routes.auth_routes import exigir_administrador
 from app.database.connection import get_db
 from app.schemas.produto_schema import ProdutoCreate, ProdutoResponse
 from app.repositories.produto_repository import (
@@ -42,6 +43,10 @@ def buscar_por_id(produto_id: int, db: Session = Depends(get_db)):
 
 # Rota para cadastrar um novo produto.
 @router.post("/", response_model=ProdutoResponse, status_code=201)
-def criar(produto: ProdutoCreate, db: Session = Depends(get_db)):
-    # Cria um novo produto no banco usando o repository.
+def criar(
+    produto: ProdutoCreate,
+    db: Session = Depends(get_db),
+    administrador = Depends(exigir_administrador)
+):
+    # Apenas usuários com perfil ADMINISTRADOR podem cadastrar produtos.
     return criar_produto(db, produto)

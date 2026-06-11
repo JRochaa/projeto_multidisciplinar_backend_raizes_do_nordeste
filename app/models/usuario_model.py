@@ -11,3 +11,4 @@ class Usuario(Base):
     telefone = Column(String(20), nullable=True)
     endereco = Column(String(255), nullable=True)
     senha = Column(String, nullable=False)
+    perfil = Column(String(30), nullable=False, default="CLIENTE")

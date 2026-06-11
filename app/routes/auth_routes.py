@@ -108,6 +108,21 @@ def obter_cliente_logado(
 
     return cliente
 
+def exigir_administrador(cliente_logado = Depends(obter_cliente_logado)):
+    """
+    Verifica se o usuário logado possui perfil de ADMINISTRADOR.
+
+    Essa função será usada como dependência em rotas que só podem ser acessadas
+    por administradores.
+    """
+    if cliente_logado.perfil != "ADMINISTRADOR":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso permitido apenas para administradores."
+        )
+
+    return cliente_logado
+
 @router.get("/me")
 def dados_usuario_logado(cliente_logado = Depends(obter_cliente_logado)):
     """
@@ -121,5 +136,6 @@ def dados_usuario_logado(cliente_logado = Depends(obter_cliente_logado)):
         "nome": cliente_logado.nome,
         "email": cliente_logado.email,
         "telefone": cliente_logado.telefone,
-        "endereco": cliente_logado.endereco
+        "endereco": cliente_logado.endereco,
+        "perfil": cliente_logado.perfil
     }

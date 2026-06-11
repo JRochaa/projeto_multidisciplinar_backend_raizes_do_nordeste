@@ -27,7 +27,8 @@ def criar_cliente(db: Session, cliente: ClienteCreate):
         email=cliente.email,
         telefone=cliente.telefone,
         endereco=cliente.endereco,
-        senha=cliente.senha
+        senha=cliente.senha,
+        perfil="CLIENTE"
     )
 
     # Adiciona o novo cliente à sessão do banco.

@@ -7,7 +7,7 @@ from app.repositories.pedido_repository import (
     buscar_pedido_por_id,
     criar_pedido
 )
-from app.schemas.pedido_schema import PedidoCreate, PedidoResponse
+from app.schemas.pedido_schema import PedidoCreate, PedidoResponse, CanalPedidoEnum
 
 
 #Rota específico para as rotas de pedidos, prefix="/pedidos" significa que todas as rotas deste arquivo começam com /pedidos.
@@ -18,11 +18,17 @@ router = APIRouter(
 )
 
 
-# Rota para listar todos os pedidos cadastrados.
+# Rota para listar todos os pedidos cadastrados, também permite filtar os pedidos pelo canal.
 @router.get("/", response_model=list[PedidoResponse])
-def listar(db: Session = Depends(get_db)):
-    # Chama o repository responsável por buscar os pedidos no banco.
-    return listar_pedidos(db)
+def listar(
+    canalPedido: CanalPedidoEnum | None = None,
+    db: Session = Depends(get_db)
+):
+    # Se canalPedido foi informado, usamos canalPedido.value.
+    # Exemplo: CanalPedidoEnum.TOTEM vira "TOTEM".
+    canal = canalPedido.value if canalPedido else None
+
+    return listar_pedidos(db, canal)
 
 
 # Rota para buscar um pedido específico pelo ID.
