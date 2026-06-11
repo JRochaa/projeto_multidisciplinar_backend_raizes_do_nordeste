@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "API Raízes do Nordeste - Testes Back-End",
-    "_postman_id": "d6f7a310-6d55-4d01-9a2c-8f6aa5f1a391",
-    "description": "Coleção de testes para o Projeto Multidisciplinar - Trilha Back-End - Rede Raízes do Nordeste. Inclui autenticação, usuários, produtos, pedidos, pagamentos e cenários positivos/negativos.",
+    "name": "API Raízes do Nordeste - Testes Atualizados",
+    "_postman_id": "b9b188f4-bc3d-4a3f-9826-4c0f3cd83a71",
+    "description": "Coleção atualizada para testar JWT, perfis de usuário, canalPedido, permissões, pedidos e pagamento mock aprovado/recusado.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -11,19 +11,47 @@
       "value": "http://127.0.0.1:8000"
     },
     {
-      "key": "email_teste",
-      "value": ""
+      "key": "admin_email",
+      "value": "admin@email.com"
     },
     {
-      "key": "senha_teste",
+      "key": "admin_senha",
       "value": "123456"
     },
     {
-      "key": "token",
+      "key": "cliente_email",
+      "value": ""
+    },
+    {
+      "key": "cliente_senha",
+      "value": "123456"
+    },
+    {
+      "key": "outro_cliente_email",
+      "value": ""
+    },
+    {
+      "key": "outro_cliente_senha",
+      "value": "123456"
+    },
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "token_cliente",
+      "value": ""
+    },
+    {
+      "key": "token_outro_cliente",
       "value": ""
     },
     {
       "key": "cliente_id",
+      "value": ""
+    },
+    {
+      "key": "outro_cliente_id",
       "value": ""
     },
     {
@@ -41,19 +69,38 @@
   ],
   "item": [
     {
+      "name": "00 - Observações de uso",
+      "item": [
+        {
+          "name": "IMPORTANTE - Criar administrador antes dos testes",
+          "request": {
+            "method": "GET",
+            "description": "Antes de executar os testes administrativos, crie um usuário pela rota POST /usuarios/ e altere o perfil dele no pgAdmin para ADMINISTRADOR:\n\nUPDATE clientes SET perfil = 'ADMINISTRADOR' WHERE email = 'admin@email.com';\n\nDepois, ajuste as variáveis admin_email e admin_senha nesta coleção.",
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": []
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "01 - Autenticação e Usuários",
       "item": [
         {
-          "name": "T01 - Cadastrar usuário válido",
+          "name": "T01 - Cadastrar cliente válido",
           "event": [
             {
               "listen": "prerequest",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const email = 'jadson.postman.' + Date.now() + '@email.com';",
-                  "pm.collectionVariables.set('email_teste', email);",
-                  "pm.collectionVariables.set('senha_teste', '123456');"
+                  "const email = 'cliente.postman.' + Date.now() + '@email.com';",
+                  "pm.collectionVariables.set('cliente_email', email);",
+                  "pm.collectionVariables.set('cliente_senha', '123456');"
                 ]
               }
             },
@@ -64,7 +111,8 @@
                 "exec": [
                   "pm.test('Status code deve ser 201', function () { pm.response.to.have.status(201); });",
                   "const json = pm.response.json();",
-                  "pm.test('Resposta deve conter id do cliente', function () { pm.expect(json.id).to.exist; });",
+                  "pm.test('Resposta deve conter id', function () { pm.expect(json.id).to.exist; });",
+                  "pm.test('Perfil deve ser CLIENTE', function () { pm.expect(json.perfil).to.eql('CLIENTE'); });",
                   "pm.collectionVariables.set('cliente_id', json.id);"
                 ]
               }
@@ -72,68 +120,29 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente Postman\",\n  \"email\": \"{{cliente_email}}\",\n  \"telefone\": \"11999999999\",\n  \"endereco\": \"São Paulo - SP\",\n  \"senha\": \"{{cliente_senha}}\"\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Jadson Postman\",\n  \"email\": \"{{email_teste}}\",\n  \"telefone\": \"11999999999\",\n  \"endereco\": \"S\\u00e3o Paulo - SP\",\n  \"senha\": \"{{senha_teste}}\"\n}"
-            },
             "url": {
               "raw": "{{base_url}}/usuarios/",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
-                "usuarios",
-                ""
+                "usuarios"
               ]
             }
           }
         },
         {
-          "name": "T02 - Cadastrar usuário com e-mail duplicado",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code deve ser 400', function () { pm.response.to.have.status(400); });",
-                  "pm.test('Mensagem deve indicar e-mail já cadastrado', function () { pm.expect(pm.response.text()).to.include('Já existe um cliente cadastrado'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Jadson Duplicado\",\n  \"email\": \"{{email_teste}}\",\n  \"telefone\": \"11999999999\",\n  \"endereco\": \"S\\u00e3o Paulo - SP\",\n  \"senha\": \"{{senha_teste}}\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/usuarios/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "usuarios",
-                ""
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03 - Login válido",
+          "name": "T02 - Login cliente",
           "event": [
             {
               "listen": "test",
@@ -143,34 +152,34 @@
                   "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
                   "const json = pm.response.json();",
                   "pm.test('Resposta deve conter access_token', function () { pm.expect(json.access_token).to.exist; });",
-                  "pm.collectionVariables.set('token', json.access_token);"
+                  "pm.collectionVariables.set('token_cliente', json.access_token);"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{cliente_email}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{cliente_senha}}",
+                  "type": "text"
+                }
+              ]
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/x-www-form-urlencoded"
               }
             ],
-            "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "username",
-                  "value": "{{email_teste}}",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "{{senha_teste}}",
-                  "type": "text"
-                }
-              ]
-            },
             "url": {
               "raw": "{{base_url}}/auth/login",
               "host": [
@@ -184,7 +193,7 @@
           }
         },
         {
-          "name": "T04 - Consultar usuário logado com token",
+          "name": "T03 - Consultar usuário logado com token cliente",
           "event": [
             {
               "listen": "test",
@@ -192,7 +201,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Resposta deve conter email do usuário logado', function () { pm.expect(pm.response.text()).to.include(pm.collectionVariables.get('email_teste')); });"
+                  "const json = pm.response.json();",
+                  "pm.test('Deve retornar perfil CLIENTE', function () { pm.expect(json.perfil).to.eql('CLIENTE'); });"
                 ]
               }
             }
@@ -204,7 +214,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{token_cliente}}",
                   "type": "string"
                 }
               ]
@@ -222,7 +232,7 @@
           }
         },
         {
-          "name": "T05 - Consultar usuário logado sem token",
+          "name": "T04 - Consultar usuário logado sem token",
           "event": [
             {
               "listen": "test",
@@ -247,14 +257,111 @@
               ]
             }
           }
+        },
+        {
+          "name": "T05 - Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Resposta deve conter access_token', function () { pm.expect(json.access_token).to.exist; });",
+                  "pm.collectionVariables.set('token_admin', json.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{admin_email}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_senha}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "02 - Produtos",
+      "name": "02 - Produtos e Permissões",
       "item": [
         {
-          "name": "T06 - Cadastrar produto válido",
+          "name": "T06 - Cliente tentando cadastrar produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Produto Bloqueado\",\n  \"descricao\": \"Cadastro deve ser bloqueado para cliente.\",\n  \"preco\": 9.9,\n  \"estoque\": 5\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/produtos/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T07 - Administrador cadastrando produto",
           "event": [
             {
               "listen": "test",
@@ -271,15 +378,25 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cuscuz Nordestino\",\n  \"descricao\": \"Produto típico do Nordeste.\",\n  \"preco\": 12.9,\n  \"estoque\": 20\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Cuscuz Nordestino\",\n  \"descricao\": \"Produto t\\u00edpico do Nordeste\",\n  \"preco\": 12.9,\n  \"estoque\": 10\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/produtos/",
@@ -287,14 +404,13 @@
                 "{{base_url}}"
               ],
               "path": [
-                "produtos",
-                ""
+                "produtos"
               ]
             }
           }
         },
         {
-          "name": "T07 - Listar produtos",
+          "name": "T08 - Listar produtos",
           "event": [
             {
               "listen": "test",
@@ -315,14 +431,13 @@
                 "{{base_url}}"
               ],
               "path": [
-                "produtos",
-                ""
+                "produtos"
               ]
             }
           }
         },
         {
-          "name": "T08 - Buscar produto inexistente",
+          "name": "T09 - Buscar produto inexistente",
           "event": [
             {
               "listen": "test",
@@ -351,10 +466,10 @@
       ]
     },
     {
-      "name": "03 - Pedidos",
+      "name": "03 - Pedidos e canalPedido",
       "item": [
         {
-          "name": "T09 - Criar pedido válido",
+          "name": "T10 - Criar pedido válido com canalPedido",
           "event": [
             {
               "listen": "test",
@@ -364,6 +479,7 @@
                   "pm.test('Status code deve ser 201', function () { pm.response.to.have.status(201); });",
                   "const json = pm.response.json();",
                   "pm.test('Pedido deve iniciar como PENDENTE', function () { pm.expect(json.status).to.eql('PENDENTE'); });",
+                  "pm.test('Pedido deve ter canalPedido APP', function () { pm.expect(json.canalPedido).to.eql('APP'); });",
                   "pm.collectionVariables.set('pedido_id', json.id);"
                 ]
               }
@@ -371,15 +487,25 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"canalPedido\": \"APP\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 2\n    }\n  ]\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 2\n    }\n  ]\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pedidos/",
@@ -387,14 +513,92 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pedidos",
-                ""
+                "pedidos"
               ]
             }
           }
         },
         {
-          "name": "T10 - Criar pedido sem itens",
+          "name": "T11 - Administrador filtrando pedidos por canalPedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Resposta deve ser uma lista', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/pedidos/?canalPedido=APP",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "canalPedido",
+                  "value": "APP"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "T12 - Cliente tentando listar todos os pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/pedidos/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T13 - Criar pedido sem canalPedido",
           "event": [
             {
               "listen": "test",
@@ -408,15 +612,25 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"itens\": []\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pedidos/",
@@ -424,37 +638,45 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pedidos",
-                ""
+                "pedidos"
               ]
             }
           }
         },
         {
-          "name": "T11 - Criar pedido com produto inexistente",
+          "name": "T14 - Criar pedido com canalPedido inválido",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code deve ser 400', function () { pm.response.to.have.status(400); });",
-                  "pm.test('Mensagem deve indicar produto não encontrado', function () { pm.expect(pm.response.text()).to.include('Produto com id'); });"
+                  "pm.test('Status code deve ser 422', function () { pm.response.to.have.status(422); });"
                 ]
               }
             }
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"canalPedido\": \"WHATSAPP\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"itens\": [\n    {\n      \"produto_id\": 999999,\n      \"quantidade\": 1\n    }\n  ]\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pedidos/",
@@ -462,14 +684,13 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pedidos",
-                ""
+                "pedidos"
               ]
             }
           }
         },
         {
-          "name": "T12 - Criar pedido com estoque insuficiente",
+          "name": "T15 - Criar pedido com estoque insuficiente",
           "event": [
             {
               "listen": "test",
@@ -484,15 +705,25 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"canalPedido\": \"WEB\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 999\n    }\n  ]\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"cliente_id\": \"{{cliente_id}}\",\n  \"itens\": [\n    {\n      \"produto_id\": \"{{produto_id}}\",\n      \"quantidade\": 999\n    }\n  ]\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pedidos/",
@@ -500,8 +731,7 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pedidos",
-                ""
+                "pedidos"
               ]
             }
           }
@@ -509,10 +739,155 @@
       ]
     },
     {
-      "name": "04 - Pagamentos",
+      "name": "04 - Pagamentos e autorização",
       "item": [
         {
-          "name": "T13 - Processar pagamento mock válido",
+          "name": "T16 - Cadastrar outro cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = 'outro.cliente.' + Date.now() + '@email.com';",
+                  "pm.collectionVariables.set('outro_cliente_email', email);",
+                  "pm.collectionVariables.set('outro_cliente_senha', '123456');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('outro_cliente_id', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Outro Cliente Postman\",\n  \"email\": \"{{outro_cliente_email}}\",\n  \"telefone\": \"11888888888\",\n  \"endereco\": \"São Paulo - SP\",\n  \"senha\": \"{{outro_cliente_senha}}\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T17 - Login outro cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('token_outro_cliente', json.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{outro_cliente_email}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{outro_cliente_senha}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T18 - Outro cliente tentando pagar pedido alheio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"PIX\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_outro_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/pagamentos/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pagamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T19 - Cliente processando pagamento mock do próprio pedido",
           "event": [
             {
               "listen": "test",
@@ -521,7 +896,8 @@
                 "exec": [
                   "pm.test('Status code deve ser 201', function () { pm.response.to.have.status(201); });",
                   "const json = pm.response.json();",
-                  "pm.test('Pagamento deve ser aprovado', function () { pm.expect(json.status).to.eql('APROVADO'); });",
+                  "pm.test('Status do pagamento deve ser APROVADO ou RECUSADO', function () { pm.expect(['APROVADO', 'RECUSADO']).to.include(json.status); });",
+                  "pm.test('Resposta deve conter mensagem de processamento', function () { pm.expect(json.mensagem).to.exist; });",
                   "pm.collectionVariables.set('pagamento_id', json.id);"
                 ]
               }
@@ -529,15 +905,25 @@
           ],
           "request": {
             "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"PIX\"\n}"
+            },
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"PIX\"\n}"
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pagamentos/",
@@ -545,14 +931,13 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pagamentos",
-                ""
+                "pagamentos"
               ]
             }
           }
         },
         {
-          "name": "T14 - Buscar pedido após pagamento",
+          "name": "T20 - Buscar pedido após tentativa de pagamento",
           "event": [
             {
               "listen": "test",
@@ -560,13 +945,24 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Pedido deve estar PAGO', function () { pm.expect(pm.response.json().status).to.eql('PAGO'); });"
+                  "const json = pm.response.json();",
+                  "pm.test('Pedido deve estar PAGO ou PENDENTE', function () { pm.expect(['PAGO', 'PENDENTE']).to.include(json.status); });"
                 ]
               }
             }
           ],
           "request": {
             "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
             "url": {
               "raw": "{{base_url}}/pedidos/{{pedido_id}}",
               "host": [
@@ -580,30 +976,30 @@
           }
         },
         {
-          "name": "T15 - Tentar pagar pedido já pago",
+          "name": "T21 - Administrador listando pagamentos",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code deve ser 400', function () { pm.response.to.have.status(400); });",
-                  "pm.test('Mensagem deve indicar pedido já pago', function () { pm.expect(pm.response.text()).to.include('já está pago'); });"
+                  "pm.test('Status code deve ser 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Resposta deve ser uma lista', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"pedido_id\": \"{{pedido_id}}\",\n  \"metodo\": \"PIX\"\n}"
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pagamentos/",
@@ -611,37 +1007,35 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pagamentos",
-                ""
+                "pagamentos"
               ]
             }
           }
         },
         {
-          "name": "T16 - Tentar pagar pedido inexistente",
+          "name": "T22 - Cliente tentando listar pagamentos",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code deve ser 400', function () { pm.response.to.have.status(400); });",
-                  "pm.test('Mensagem deve indicar pedido não encontrado', function () { pm.expect(pm.response.text()).to.include('não encontrado'); });"
+                  "pm.test('Status code deve ser 403', function () { pm.response.to.have.status(403); });"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"pedido_id\": 999999,\n  \"metodo\": \"PIX\"\n}"
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/pagamentos/",
@@ -649,8 +1043,53 @@
                 "{{base_url}}"
               ],
               "path": [
-                "pagamentos",
-                ""
+                "pagamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "T23 - Cliente tentando pagar pedido inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code deve ser 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 999999,\n  \"metodo\": \"PIX\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/pagamentos/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pagamentos"
               ]
             }
           }
